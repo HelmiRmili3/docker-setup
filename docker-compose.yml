@@ -21,7 +21,7 @@ services:
         VITE_BASE_URL: http://localhost:5000
     container_name: frontend
     ports:
-      - "3000:80"
+      - "3000:3000"
     environment:
       - VITE_BASE_URL=http://localhost:5000
     depends_on:
@@ -41,3 +41,4 @@ services:
 
 volumes:
   pgdata:
+
