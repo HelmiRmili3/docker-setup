@@ -1,0 +1,101 @@
+# services:
+#   backend:
+#     build:
+#       context: ./Backend
+#       dockerfile: Dockerfile
+#     container_name: backend
+#     ports:
+#       - "5000:5000"
+#     environment:
+#       - ASPNETCORE_ENVIRONMENT=Development
+#       - ASPNETCORE_URLS=http://+:5000
+#       - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=postgres;Username=postgres;Password=helmirmili123
+#     depends_on:
+#       - db
+
+#   frontend:
+#     build:
+#       context: ./frontend
+#       dockerfile: Dockerfile
+#       args:
+#         VITE_BASE_URL: http://localhost:5000
+#     container_name: frontend
+#     ports:
+#       - "3000:80"
+#     environment:
+#       - VITE_BASE_URL=http://localhost:5000
+#     depends_on:
+#       - backend
+
+#   db:
+#     image: postgres:17.4
+#     container_name: db
+#     environment:
+#       POSTGRES_USER: postgres
+#       POSTGRES_PASSWORD: helmirmili123
+#       POSTGRES_DB: postgres
+#     ports:
+#       - "5433:5432"
+#     volumes:
+#       - pgdata:/var/lib/postgresql/data
+
+# volumes:
+#   pgdata:
+services:
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile.dev
+    container_name: backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./Backend:/app            # Bind mount for live code changes
+      - ~/.nuget/packages:/root/.nuget/packages:ro
+      - /app/bin                  # Anonymous volume to prevent overwriting
+      - /app/obj
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5000
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=postgres;Username=postgres;Password=helmirmili123
+      - DOTNET_USE_POLLING_FILE_WATCHER=1
+      - DOTNET_WATCH_RESTART_ON_RUDE_EDIT=true
+    depends_on:
+      - db
+    stdin_open: true
+    tty: true
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+      args:
+        # Inside container, use backend service name instead of localhost
+        VITE_BASE_URL: http://backend:5000
+    container_name: frontend
+    ports:
+      - "3000:3000"   # Use dev server port directly (not nginx 80)
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      # Host can still reach backend at localhost:5000
+      - VITE_BASE_URL=http://localhost:5000
+      - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - backend
+
+  db:
+    image: postgres:17.4
+    container_name: db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: helmirmili123
+      POSTGRES_DB: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
