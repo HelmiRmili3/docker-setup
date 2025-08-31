@@ -21,7 +21,7 @@ services:
     ports:
       - "3000:80"
     environment:
-      - VITE_BASE_URL=${VM_PUBLIC_IP}
+      - VITE_BASE_URL=http://172.190.236.125:5000
     depends_on:
       - backend
 
@@ -39,3 +39,4 @@ services:
 
 volumes:
   pgdata:
+
